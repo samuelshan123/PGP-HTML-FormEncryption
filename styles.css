@@ -1,0 +1,16 @@
+body{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.card{
+    background-color: #ccc;
+    border: 5px;
+}
+
+form{
+    display: flex;
+    flex-direction: column;
+}
