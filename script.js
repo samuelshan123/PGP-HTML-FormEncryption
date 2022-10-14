@@ -48,46 +48,34 @@ window.onload = async function () {
 }
 
 async function encrypt(payload) {
-
     console.log(sender);
-
     const receiverPrivateKeyObject = await openpgp.readKey({
         armoredKey: receiver.private,
     })
     const receiverPublicKeyObject = await openpgp.readKey({
         armoredKey: receiver.public,
     })
-
   senderPrivateKeyObject = await openpgp.readKey({
         armoredKey: sender.private,
     })
     const senderPublicKeyObject = await openpgp.readKey({
         armoredKey: sender.public,
     })
-
     console.log(senderPublicKeyObject);
-
-
-    // Encrypting message with receiver private key
      encryptedMessage = await openpgp.encrypt({
         message: await openpgp.createMessage({
             text: payload,
         }),
         encryptionKeys: senderPublicKeyObject,
-        signingKeys: receiverPrivateKeyObject,
+        // signingKeys: receiverPrivateKeyObject,
     })
     console.log(encryptedMessage);
-
     document.getElementById('encrypted_message').innerHTML=encryptedMessage
-
- 
 }
 
 
 async function decrypt(){
-       // Decrypting message
-
-    // Creating Message object from armored string
+ 
     const encryptedMessageObj = await openpgp.readMessage({
         armoredMessage: encryptedMessage,
     })
@@ -95,7 +83,6 @@ async function decrypt(){
     console.log(senderPrivateKeyObject);
 
    
- // Decrypting Message object with sender Private Key Object
  const decryptedMessage = await openpgp.decrypt({
     message: encryptedMessageObj,
     decryptionKeys: senderPrivateKeyObject,
