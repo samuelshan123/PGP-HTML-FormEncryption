@@ -1,6 +1,10 @@
-var user1;
-var user2;
+var receiver;
+var sender;
+var encryptedMessage;
+var senderPrivateKeyObject;
 window.onload = async function () {
+
+    document.getElementById('output').style.display="none";
     async function generateKeys(name, email) {
         const key = await openpgp.generateKey({
             userIDs: [{
@@ -15,7 +19,7 @@ window.onload = async function () {
             private: key.privateKey
         }
     }
-    user1 = await generateKeys('user1', 'user1@mail.com')
+    receiver = await generateKeys('receiver', 'receiver@mail.com')
 
     document.getElementById("encrypt").addEventListener("click", async function (event) {
         event.preventDefault()
@@ -30,36 +34,42 @@ window.onload = async function () {
         if (!payload.name || !payload.email || !payload.message || !receiver_public_key) {
             alert("fields cant be empty")
         } else {
-            user2 = await generateKeys(payload.name, payload.email)
+            sender = await generateKeys(payload.name, payload.email)
             await encrypt(JSON.stringify(payload))
         }
 
     });
+
+    document.getElementById("decrypt").addEventListener("click", async function (event) {
+        event.preventDefault()
+        decrypt()
+    })
+    
 }
 
 async function encrypt(payload) {
 
-    console.log(user2);
+    console.log(sender);
 
     const receiverPrivateKeyObject = await openpgp.readKey({
-        armoredKey: user1.private,
+        armoredKey: receiver.private,
     })
     const receiverPublicKeyObject = await openpgp.readKey({
-        armoredKey: user1.public,
+        armoredKey: receiver.public,
     })
 
-    const senderPrivateKeyObject = await openpgp.readKey({
-        armoredKey: user2.private,
+  senderPrivateKeyObject = await openpgp.readKey({
+        armoredKey: sender.private,
     })
     const senderPublicKeyObject = await openpgp.readKey({
-        armoredKey: user2.public,
+        armoredKey: sender.public,
     })
 
     console.log(senderPublicKeyObject);
 
 
-    // Encrypting message with User1 private key
-    const encryptedMessage = await openpgp.encrypt({
+    // Encrypting message with receiver private key
+     encryptedMessage = await openpgp.encrypt({
         message: await openpgp.createMessage({
             text: payload,
         }),
@@ -68,18 +78,35 @@ async function encrypt(payload) {
     })
     console.log(encryptedMessage);
 
-    // Decrypting message
+    document.getElementById('encrypted_message').innerHTML=encryptedMessage
+
+ 
+}
+
+
+async function decrypt(){
+       // Decrypting message
 
     // Creating Message object from armored string
     const encryptedMessageObj = await openpgp.readMessage({
         armoredMessage: encryptedMessage,
     })
 
-    // Decrypting Message object with User2 Private Key Object
-    const decryptedMessage = await openpgp.decrypt({
-        message: encryptedMessageObj,
-        decryptionKeys: senderPrivateKeyObject,
-    })
+    console.log(senderPrivateKeyObject);
 
-    console.log(decryptedMessage)
+   
+ // Decrypting Message object with sender Private Key Object
+ const decryptedMessage = await openpgp.decrypt({
+    message: encryptedMessageObj,
+    decryptionKeys: senderPrivateKeyObject,
+})
+var result =JSON.parse(decryptedMessage.data)
+document.getElementById('output').style.display="block";
+
+document.getElementById('d_name').innerHTML=`Name: ${result.name}`;
+document.getElementById('d_email').innerHTML=`Email: ${result.email}`;
+document.getElementById('d_message').innerHTML=`Message: ${result.message}`;
+
+
+console.log(decryptedMessage)
 }
